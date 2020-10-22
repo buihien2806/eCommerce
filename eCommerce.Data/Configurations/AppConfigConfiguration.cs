@@ -11,7 +11,7 @@ namespace eCommerce.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<AppConfig> builder)
         {
-            builder.ToTable("AppConfigs");
+            builder.ToTable("AppConfig");
 
             builder.HasKey(x => x.Key);
 

@@ -18,6 +18,6 @@ namespace eCommerce.Data.Domain
 
         public List<OrderDetail> OrderDetails { get; set; }
 
-        public AppUser AppUser { get; set; }
+        //public AppUser AppUser { get; set; }
     }
 }
