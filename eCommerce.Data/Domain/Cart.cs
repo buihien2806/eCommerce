@@ -16,6 +16,6 @@ namespace eCommerce.Data.Domain
         
         public DateTime CreatedDate { get; set; }
 
-        public AppUser AppUser { get; set; }
+     
     }
 }
