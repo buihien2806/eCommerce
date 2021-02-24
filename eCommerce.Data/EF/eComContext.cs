@@ -24,6 +24,7 @@ namespace eCommerce.Data.EF
             modelBuilder.ApplyConfiguration(new OrderConfigurationcs());
             modelBuilder.ApplyConfiguration(new OrderDetailConfiguration());
             modelBuilder.ApplyConfiguration(new CartConfiguration());
+            modelBuilder.ApplyConfiguration(new ContactConfiguration());
             modelBuilder.ApplyConfiguration(new LanguageConfiguration());
             modelBuilder.ApplyConfiguration(new TransactionConfiguration());
             //Data Seeding  
@@ -37,6 +38,7 @@ namespace eCommerce.Data.EF
         public DbSet<ProductCategory> ProductCategories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<Cart> Carts { get; set; }
+        public DbSet<Contact> Contacts { get; set; }
         public DbSet<Language> Languages { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderDetail> OrderDetails { get; set; }
