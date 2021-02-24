@@ -36,11 +36,28 @@ namespace eCommerce.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Contact",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(maxLength: 200, nullable: false),
+                    Email = table.Column<string>(maxLength: 200, nullable: false),
+                    PhoneNumber = table.Column<string>(maxLength: 200, nullable: false),
+                    Message = table.Column<string>(nullable: false),
+                    Status = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Contact", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Language",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
+                    Id = table.Column<string>(unicode: false, maxLength: 5, nullable: false),
+                    Name = table.Column<string>(maxLength: 20, nullable: false),
                     IsDefault = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
@@ -86,6 +103,27 @@ namespace eCommerce.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Transaction",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TransactionDate = table.Column<DateTime>(nullable: false),
+                    ExternalTransactionId = table.Column<string>(nullable: true),
+                    Amount = table.Column<decimal>(nullable: false),
+                    Fee = table.Column<decimal>(nullable: false),
+                    Result = table.Column<string>(nullable: true),
+                    Message = table.Column<string>(nullable: true),
+                    Status = table.Column<int>(nullable: false),
+                    Provider = table.Column<string>(nullable: true),
+                    UserId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transaction", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CategoryTranslation",
                 columns: table => new
                 {
@@ -108,15 +146,15 @@ namespace eCommerce.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CategoryTranslation_Languages_LanguageId",
+                        name: "FK_CategoryTranslation_Language_LanguageId",
                         column: x => x.LanguageId,
-                        principalTable: "Languages",
+                        principalTable: "Language",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Carts",
+                name: "Cart",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
@@ -129,9 +167,9 @@ namespace eCommerce.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Carts", x => x.Id);
+                    table.PrimaryKey("PK_Cart", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Carts_Product_ProductId",
+                        name: "FK_Cart_Product_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Product",
                         principalColumn: "Id",
@@ -139,7 +177,7 @@ namespace eCommerce.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderDetails",
+                name: "OrderDetail",
                 columns: table => new
                 {
                     OrderId = table.Column<int>(nullable: false),
@@ -149,15 +187,15 @@ namespace eCommerce.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderDetails", x => new { x.OrderId, x.ProductId });
+                    table.PrimaryKey("PK_OrderDetail", x => new { x.OrderId, x.ProductId });
                     table.ForeignKey(
-                        name: "FK_OrderDetails_Order_OrderId",
+                        name: "FK_OrderDetail_Order_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Order",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_OrderDetails_Product_ProductId",
+                        name: "FK_OrderDetail_Product_ProductId",
                         column: x => x.ProductId,
                         principalTable: "Product",
                         principalColumn: "Id",
@@ -232,9 +270,9 @@ namespace eCommerce.Data.Migrations
                 {
                     table.PrimaryKey("PK_ProductTranslation", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProductTranslation_Languages_LanguageId",
+                        name: "FK_ProductTranslation_Language_LanguageId",
                         column: x => x.LanguageId,
-                        principalTable: "Languages",
+                        principalTable: "Language",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -245,9 +283,67 @@ namespace eCommerce.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "AppConfig",
+                columns: new[] { "Key", "Value" },
+                values: new object[,]
+                {
+                    { "HomeTitle", "This is home page of eShopSolution" },
+                    { "HomeKeyword", "This is keyword of eShopSolution" },
+                    { "HomeDescription", "This is description of eShopSolution" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Category",
+                columns: new[] { "Id", "IsShowOnHome", "ParentId", "SortOrder" },
+                values: new object[,]
+                {
+                    { 1, true, null, 1 },
+                    { 2, true, null, 2 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Language",
+                columns: new[] { "Id", "IsDefault", "Name" },
+                values: new object[,]
+                {
+                    { "vi", true, "Tiếng Việt" },
+                    { "en", false, "English" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Product",
+                columns: new[] { "Id", "DateCreated", "IsFeatured", "OriginalPrice", "Price" },
+                values: new object[] { 1, new DateTime(2021, 2, 24, 10, 12, 40, 146, DateTimeKind.Local).AddTicks(1218), null, 100000m, 200000m });
+
+            migrationBuilder.InsertData(
+                table: "CategoryTranslation",
+                columns: new[] { "Id", "CategoryId", "LanguageId", "Name", "SeoAlias", "SeoDescription", "SeoTitle" },
+                values: new object[,]
+                {
+                    { 1, 1, "vi", "Áo nam", "ao-nam", "Sản phẩm áo thời trang nam", "Sản phẩm áo thời trang nam" },
+                    { 3, 2, "vi", "Áo nữ", "ao-nu", "Sản phẩm áo thời trang nữ", "Sản phẩm áo thời trang women" },
+                    { 2, 1, "en", "Men Shirt", "men-shirt", "The shirt products for men", "The shirt products for men" },
+                    { 4, 2, "en", "Women Shirt", "women-shirt", "The shirt products for women", "The shirt products for women" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "ProductCategory",
+                columns: new[] { "CategoryId", "ProductId" },
+                values: new object[] { 1, 1 });
+
+            migrationBuilder.InsertData(
+                table: "ProductTranslation",
+                columns: new[] { "Id", "FullDescription", "LanguageId", "Name", "ProductId", "SeoAlias", "SeoDescription", "SeoTitle", "ShortDescription" },
+                values: new object[,]
+                {
+                    { 1, "Áo sơ mi nam trắng Việt Tiến", "vi", "Áo sơ mi nam trắng Việt Tiến", 1, "ao-so-mi-nam-trang-viet-tien", "Áo sơ mi nam trắng Việt Tiến", "Áo sơ mi nam trắng Việt Tiến", "Áo sơ mi nam trắng Việt Tiến" },
+                    { 2, "Viet Tien Men T-Shirt", "en", "Viet Tien Men T-Shirt", 1, "viet-tien-men-t-shirt", "Viet Tien Men T-Shirt", "Viet Tien Men T-Shirt", "Viet Tien Men T-Shirt" }
+                });
+
             migrationBuilder.CreateIndex(
-                name: "IX_Carts_ProductId",
-                table: "Carts",
+                name: "IX_Cart_ProductId",
+                table: "Cart",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
@@ -261,8 +357,8 @@ namespace eCommerce.Data.Migrations
                 column: "LanguageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderDetails_ProductId",
-                table: "OrderDetails",
+                name: "IX_OrderDetail_ProductId",
+                table: "OrderDetail",
                 column: "ProductId");
 
             migrationBuilder.CreateIndex(
@@ -292,13 +388,16 @@ namespace eCommerce.Data.Migrations
                 name: "AppConfig");
 
             migrationBuilder.DropTable(
-                name: "Carts");
+                name: "Cart");
 
             migrationBuilder.DropTable(
                 name: "CategoryTranslation");
 
             migrationBuilder.DropTable(
-                name: "OrderDetails");
+                name: "Contact");
+
+            migrationBuilder.DropTable(
+                name: "OrderDetail");
 
             migrationBuilder.DropTable(
                 name: "ProductCategory");
@@ -310,13 +409,16 @@ namespace eCommerce.Data.Migrations
                 name: "ProductTranslation");
 
             migrationBuilder.DropTable(
+                name: "Transaction");
+
+            migrationBuilder.DropTable(
                 name: "Order");
 
             migrationBuilder.DropTable(
                 name: "Category");
 
             migrationBuilder.DropTable(
-                name: "Languages");
+                name: "Language");
 
             migrationBuilder.DropTable(
                 name: "Product");
