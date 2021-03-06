@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Catalog\Products\" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.3" />
   </ItemGroup>
 
 </Project>
