@@ -4,7 +4,7 @@ using System.Text;
 
 namespace eCommerce.Model.Common
 {
-    public class PagedResult<T>
+    public class PagedResult<T> : PagedResultBase
     {
         public List<T> Items { set; get; }
     }

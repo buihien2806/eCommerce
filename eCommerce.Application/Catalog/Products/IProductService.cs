@@ -11,19 +11,20 @@ namespace eCommerce.Application.Catalog.Products
     public interface IProductService
     {
         Task<int> ProductCreate(ProductCreateRequest request);
+
         Task<int> ProductUpdate(ProductUpdateRequest request);
-        Task<int> ProductDelete(int productId);
-        Task<ProductView> ProductGetAll();
         Task<bool> ProductUpdatePrice(int productId, decimal newPrice);
         Task<bool> ProductUpdateQuantity(int productId, int quantity);
-        PagedResult<ProductView> ProductPaging(ProductAdminGetPagingRequest request);
+
+        Task<int> ProductDelete(int productId);
+
+        Task<ProductView> ProductGetById(int productId, string languageId);
+        Task<PagedResult<ProductView>> ProductGetByCategoryID(string languageId, ProductGuiGetPagingRequest request);
+        Task<PagedResult<ProductView>> ProductGetAllPaging(ProductAdminGetPagingRequest request);
+
         Task<int> ProductImageAdd(int productId, ProductImageCreate request);
-
         Task<int> ProductImageRemove(int imageId);
-
         Task<int> ProductImageUpdate(int imageId, ProductImageUpdate request);
         Task<ProductImageView> ProductImageGetByID(int imageId);
-
-        Task<List<ProductView>> GetAll();
     }
 }

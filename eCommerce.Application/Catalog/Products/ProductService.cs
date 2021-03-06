@@ -52,10 +52,10 @@ namespace eCommerce.Application.Catalog.Products
                 {
                     translations.Add(new ProductTranslation()
                     {
-                        //Name = SystemConstants.ProductConstants.NA,
-                        //Description = SystemConstants.ProductConstants.NA,
-                        //SeoAlias = SystemConstants.ProductConstants.NA,
-                        //LanguageId = language.Id
+                        Name = SystemConstant.ProductConstants.NA,
+                        ShortDescription = SystemConstant.ProductConstants.NA,
+                        SeoAlias = SystemConstant.ProductConstants.NA,
+                        LanguageId = language.Id
                     });
                 }
             }
@@ -143,20 +143,33 @@ namespace eCommerce.Application.Catalog.Products
             return await _context.SaveChangesAsync();
         }
 
-        public Task<ProductView> ProductGetAll()
+        public async Task<List<ProductView>> ProductGetAll(int languageId)
         {
-            throw new NotImplementedException();
+            //1. Select join
+            var query = from p in _context.Products
+                        join pt in _context.ProductTranslations on p.Id equals pt.ProductId
+                        join pic in _context.ProductCategories on p.Id equals pic.ProductId
+                        join c in _context.Categories on pic.CategoryId equals c.Id
+                        select new { p, pt, pic };
+            var data = await query.Select(x => new ProductView()
+            {
+                Id = x.p.Id,
+                Name = x.pt.Name,
+                DateCreated = x.p.DateCreated,
+                Description = x.pt.ShortDescription,
+                Details = x.pt.FullDescription,
+                LanguageId = x.pt.LanguageId,
+                OriginalPrice = x.p.OriginalPrice,
+                Price = x.p.Price,
+                SeoAlias = x.pt.SeoAlias,
+                SeoDescription = x.pt.SeoDescription,
+                SeoTitle = x.pt.SeoTitle,
+                Stock = x.p.Stock,
+                ViewCount = x.p.ViewCount
+            }).ToListAsync();
+            return data;
         }
 
-        public PagedResult<ProductView> ProductPaging()
-        {
-            throw new NotImplementedException();
-        }
-
-        public PagedResult<ProductView> ProductPaging(ProductAdminGetPagingRequest request)
-        {
-            throw new NotImplementedException();
-        }
         //UPDATE PRICE
         public async Task<bool> ProductUpdatePrice(int productId, decimal newPrice)
         {
@@ -239,15 +252,26 @@ namespace eCommerce.Application.Catalog.Products
             return viewModel;
         }
 
-        public async Task<List<ProductView>> GetAll()
+        public async Task<PagedResult<ProductView>> ProductGetByCategoryID(string languageId, ProductGuiGetPagingRequest request)
         {
-            //1. Select join
+            //SELECT DATA
             var query = from p in _context.Products
                         join pt in _context.ProductTranslations on p.Id equals pt.ProductId
                         join pic in _context.ProductCategories on p.Id equals pic.ProductId
-                        join c in _context.Categories on pic.CategoryId equals c.Id                        
+                        join c in _context.Categories on pic.CategoryId equals c.Id
+                        where pt.LanguageId == languageId
                         select new { p, pt, pic };
-            var data = await query.Select(x => new ProductView()
+            //FILTER
+            if (request.CategoryId.HasValue && request.CategoryId.Value > 0)
+            {
+                query = query.Where(p => p.pic.CategoryId == request.CategoryId);
+            }
+            //PAGING
+            int totalRow = await query.CountAsync();
+
+            var data = await query.Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new ProductView()
                 {
                     Id = x.p.Id,
                     Name = x.pt.Name,
@@ -263,7 +287,106 @@ namespace eCommerce.Application.Catalog.Products
                     Stock = x.p.Stock,
                     ViewCount = x.p.ViewCount
                 }).ToListAsync();
-            return data;
+
+            //SELECT
+            var pagedResult = new PagedResult<ProductView>()
+            {
+                TotalRecords = totalRow,
+                PageSize = request.PageSize,
+                PageIndex = request.PageIndex,
+                Items = data
+            };
+            return pagedResult;
+        }
+
+        public async Task<ProductView> ProductGetById(int productId, string languageId)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            var productTranslation = await _context.ProductTranslations.FirstOrDefaultAsync(x => x.ProductId == productId
+            && x.LanguageId == languageId);
+
+            var categories = await(from c in _context.Categories
+                                   join ct in _context.CategoryTranslations on c.Id equals ct.CategoryId
+                                   join pic in _context.ProductCategories on c.Id equals pic.CategoryId
+                                   where pic.ProductId == productId && ct.LanguageId == languageId
+                                   select ct.Name).ToListAsync();
+
+            var image = await _context.ProductImages.Where(x => x.ProductId == productId && x.IsDefault == true).FirstOrDefaultAsync();
+
+            var productViewModel = new ProductView()
+            {
+                Id = product.Id,
+                DateCreated = product.DateCreated,
+                Description = productTranslation != null ? productTranslation.ShortDescription : null,
+                LanguageId = productTranslation.LanguageId,
+                Details = productTranslation != null ? productTranslation.FullDescription : null,
+                Name = productTranslation != null ? productTranslation.Name : null,
+                OriginalPrice = product.OriginalPrice,
+                Price = product.Price,
+                SeoAlias = productTranslation != null ? productTranslation.SeoAlias : null,
+                SeoDescription = productTranslation != null ? productTranslation.SeoDescription : null,
+                SeoTitle = productTranslation != null ? productTranslation.SeoTitle : null,
+                Stock = product.Stock,
+                ViewCount = product.ViewCount,
+                Categories = categories,
+                ThumbnailImage = image != null ? image.ImagePath : "no-image.jpg"
+            };
+            return productViewModel;
+        }
+
+        public async Task<PagedResult<ProductView>> ProductGetAllPaging(ProductAdminGetPagingRequest request)
+        {
+            var query = from p in _context.Products
+                        join pt in _context.ProductTranslations on p.Id equals pt.ProductId
+                        join pic in _context.ProductCategories on p.Id equals pic.ProductId into ppic
+                        from pic in ppic.DefaultIfEmpty()
+                        join c in _context.Categories on pic.CategoryId equals c.Id into picc
+                        from c in picc.DefaultIfEmpty()
+                        join pi in _context.ProductImages on p.Id equals pi.ProductId into ppi
+                        from pi in ppi.DefaultIfEmpty()
+                        where pt.LanguageId == request.LanguageId && pi.IsDefault == true
+                        select new { p, pt, pic, pi };
+            //2. filter
+            if (!string.IsNullOrEmpty(request.Keyword))
+                query = query.Where(x => x.pt.Name.Contains(request.Keyword));
+
+            if (request.CategoryId != null && request.CategoryId != 0)
+            {
+                query = query.Where(p => p.pic.CategoryId == request.CategoryId);
+            }
+
+            //3. Paging
+            int totalRow = await query.CountAsync();
+
+            var data = await query.Skip((request.PageIndex - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new ProductView()
+                {
+                    Id = x.p.Id,
+                    Name = x.pt.Name,
+                    DateCreated = x.p.DateCreated,
+                    Description = x.pt.ShortDescription,
+                    Details = x.pt.FullDescription,
+                    LanguageId = x.pt.LanguageId,
+                    OriginalPrice = x.p.OriginalPrice,
+                    Price = x.p.Price,
+                    SeoAlias = x.pt.SeoAlias,
+                    SeoDescription = x.pt.SeoDescription,
+                    SeoTitle = x.pt.SeoTitle,
+                    Stock = x.p.Stock,
+                    ViewCount = x.p.ViewCount,
+                    ThumbnailImage = x.pi.ImagePath
+                }).ToListAsync();
+
+            //4. Select and projection
+            var pagedResult = new PagedResult<ProductView>()
+            {
+                TotalRecords = totalRow,
+                PageSize = request.PageSize,
+                PageIndex = request.PageIndex,
+                Items = data
+            };
+            return pagedResult;
         }
     }
 }
