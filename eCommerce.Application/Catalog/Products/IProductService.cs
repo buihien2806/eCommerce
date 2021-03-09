@@ -22,6 +22,7 @@ namespace eCommerce.Application.Catalog.Products
         Task<PagedResult<ProductView>> ProductGetByCategoryID(string languageId, ProductGuiGetPagingRequest request);
         Task<PagedResult<ProductView>> ProductGetAllPaging(ProductAdminGetPagingRequest request);
 
+        Task<List<ProductImageView>> GetListImage(int productId);
         Task<int> ProductImageAdd(int productId, ProductImageCreate request);
         Task<int> ProductImageRemove(int imageId);
         Task<int> ProductImageUpdate(int imageId, ProductImageUpdate request);
