@@ -22,7 +22,7 @@ namespace eCommerce.Application.Catalog.Products
         private readonly IStorageService _storageService;
         private const string USER_CONTENT_FOLDER_NAME = "user-content";
 
-        public ProductService(eComContext context, 
+        public ProductService(eComContext context,
                               IStorageService storageService)
         {
             _context = context;
@@ -88,7 +88,7 @@ namespace eCommerce.Application.Catalog.Products
             await _context.SaveChangesAsync();
             return product.Id;
         }
-        
+
         //UPDATE PRODUCT
         public async Task<int> ProductUpdate(ProductUpdateRequest request)
         {
@@ -305,11 +305,11 @@ namespace eCommerce.Application.Catalog.Products
             var productTranslation = await _context.ProductTranslations.FirstOrDefaultAsync(x => x.ProductId == productId
             && x.LanguageId == languageId);
 
-            var categories = await(from c in _context.Categories
-                                   join ct in _context.CategoryTranslations on c.Id equals ct.CategoryId
-                                   join pic in _context.ProductCategories on c.Id equals pic.CategoryId
-                                   where pic.ProductId == productId && ct.LanguageId == languageId
-                                   select ct.Name).ToListAsync();
+            var categories = await (from c in _context.Categories
+                                    join ct in _context.CategoryTranslations on c.Id equals ct.CategoryId
+                                    join pic in _context.ProductCategories on c.Id equals pic.CategoryId
+                                    where pic.ProductId == productId && ct.LanguageId == languageId
+                                    select ct.Name).ToListAsync();
 
             var image = await _context.ProductImages.Where(x => x.ProductId == productId && x.IsDefault == true).FirstOrDefaultAsync();
 
@@ -387,6 +387,22 @@ namespace eCommerce.Application.Catalog.Products
                 Items = data
             };
             return pagedResult;
+        }
+
+        public async Task<List<ProductImageView>> GetListImage(int productId)
+        {
+            return await _context.ProductImages.Where(x => x.ProductId == productId)
+                .Select(i => new ProductImageView()
+                {
+                    Caption = i.Caption,
+                    DateCreated = i.CreatedDate,
+                    FileSize = i.FileSize,
+                    Id = i.Id,
+                    ImagePath = i.ImagePath,
+                    IsDefault = i.IsDefault,
+                    ProductId = i.ProductId,
+                    SortOrder = i.SortOrder
+                }).ToListAsync();
         }
     }
 }
