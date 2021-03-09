@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <Folder Include="System\Languages\" />
-    <Folder Include="System\Users\" />
     <Folder Include="System\Roles\" />
   </ItemGroup>
 
