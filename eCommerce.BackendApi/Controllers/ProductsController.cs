@@ -13,22 +13,22 @@ namespace eCommerce.BackendApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         private readonly IProductService _productService;
-        public ProductController(IProductService productService)
+        public ProductsController(IProductService productService)
         {
             _productService = productService;
         }
 
-        [HttpGet("{paging}")]
-        public async Task<IActionResult> GetAll([FromQuery] ProductAdminGetPagingRequest request)
-        {
-            var product = await _productService.ProductGetAllPaging(request);
-            return Ok(product);
-        }
+        //[HttpGet("{paging}")]
+        //public async Task<IActionResult> GetAll([FromQuery] ProductAdminGetPagingRequest request)
+        //{
+        //    var product = await _productService.ProductGetAllPaging(request);
+        //    return Ok(product);
+        //}
 
-        [HttpGet("{productId}/{languageId}")]
+        [HttpGet("{productId}/{languageId}")]        
         public async Task<IActionResult> GetById(int productId, string languageId)
         {
             var product = await _productService.ProductGetById(productId, languageId);
