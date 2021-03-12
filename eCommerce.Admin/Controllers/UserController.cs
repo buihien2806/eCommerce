@@ -2,6 +2,7 @@
 using eCommerce.Model.System.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Logging;
@@ -25,14 +26,23 @@ namespace eCommerce.Admin.Controllers
             _userClient = userClient;
             _configuration = configuration; 
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string keyword, int pageIndex = 1, int pageSize = 10)
         {
-            return View();
+            var session = HttpContext.Session.GetString("Token");
+            var request = new UserGetPagingRequest()
+            {
+                Keyword = keyword,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            };
+            var data = await _userClient.UserGetPaging(request);
+            return View(data);
         }
         [HttpGet]
         public async Task<IActionResult> Login()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            HttpContext.Session.Remove("Token");
             return View();
         }
         [HttpPost]
@@ -41,13 +51,14 @@ namespace eCommerce.Admin.Controllers
             if (!ModelState.IsValid)
                 return View(ModelState);
 
-            var result = await _userClient.Authenticate(request);
-            var userPrintcipal = this.ValidateToken(result);
+            var resultToken = await _userClient.Authenticate(request);
+            var userPrintcipal = this.ValidateToken(resultToken);
             var authProperties = new AuthenticationProperties
             {
                 ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(10),
                 IsPersistent = true
             };
+            HttpContext.Session.SetString("Token", resultToken);
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 userPrintcipal,

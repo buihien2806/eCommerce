@@ -37,6 +37,11 @@ namespace eCommerce.Admin
             services.AddControllersWithViews()
                     .AddRazorRuntimeCompilation() 
                     .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<LoginRequestValidator>());
+            
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+            });
 
             services.AddTransient<IUserClient, UserClient>();
         }
@@ -61,6 +66,7 @@ namespace eCommerce.Admin
             app.UseRouting();
             app.UseAuthorization();
 
+            app.UseSession();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
